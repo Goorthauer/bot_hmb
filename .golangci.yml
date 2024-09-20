@@ -1,0 +1,136 @@
+run:
+  # default concurrency is a available CPU number
+  concurrency: 4
+
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  deadline: 30m
+
+  # exit code when at least one issue was found, default is 1
+  issues-exit-code: 1
+
+  # include test files or not, default is true
+  tests: true
+
+  # skip files
+  skip-files:
+    - ".*\\_gen\\.go$"
+
+  # use vendor dir
+  modules-download-mode: mod
+
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+
+linters-settings:
+  goimports:
+    # put imports beginning with prefix after 3rd-party packages;
+    # it's a comma-separated list of prefixes
+    local-prefixes: apisrv
+  govet:
+    # settings per analyzer
+    settings:
+      printf: # analyzer name, run `go tool vet help` to see all analyzers
+        funcs: # run `go tool vet help printf` to see available settings for `printf` analyzer
+          - (apisrv/pkg/embedlog.Logger).Printf
+          - (apisrv/pkg/embedlog.Logger).Errorf
+  gocritic:
+    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint` run to see all tags and checks.
+    # Empty list by default. See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    enabled-checks:
+      - appendAssign
+      - appendCombine
+      - assignOp
+      - badCond
+      - boolExprSimplify
+      - captLocal
+      - caseOrder
+      - defaultCaseOrder
+      - dupArg
+      - dupBranchBody
+      - dupCase
+      - dupSubExpr
+      - elseif
+      - emptyFallthrough
+      - emptyStringTest
+      - equalFold
+      - exitAfterDefer
+      - flagName
+      - hexLiteral
+      - indexAlloc
+      - nilValReturn
+      - offBy1
+      - regexpMust
+      - sloppyLen
+      - switchTrue
+      - wrapperFunc
+      - yodaStyleExpr
+  revive:
+    ignore-generated-header: true
+    severity: warning
+    rules:
+      - name: atomic
+      - name: range
+      - name: range-val-in-closure
+      - name: range-val-address
+      - name: redefines-builtin-id
+      - name: string-of-int
+      - name: superfluous-else
+      - name: time-naming
+      - name: unconditional-recursion
+      - name: unexported-naming
+      - name: unnecessary-stmt
+      - name: unreachable-code
+      - name: useless-break
+      - name: bool-literal-in-expr
+      - name: confusing-results
+      - name: constant-logical-expr
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: defer
+        arguments: [ [ "call-chain","loop", "method-call", "return" ] ]
+      - name: empty-block
+      - name: error-return
+      - name: errorf
+      - name: function-result-limit
+        arguments: [ 3 ]
+      - name: identical-branches
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: modifies-parameter
+      - name: modifies-value-receiver
+      - name: var-declaration
+      - name: bare-return
+      - name: early-return
+      - name: error-naming
+      - name: if-return
+      - name: import-shadowing
+
+linters:
+  enable-all: false
+  disable-all: true
+  enable:
+    - bodyclose
+#    - deadcode
+    - dogsled
+    - dupl
+    - goconst
+    - gofmt
+    - goimports
+    - gosimple
+    - gocritic
+    - govet
+    - ineffassign
+    - staticcheck
+#    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+#    - varcheck
+    - revive
