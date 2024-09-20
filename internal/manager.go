@@ -3,6 +3,7 @@ package internal
 import (
 	"bot_hmb/internal/db"
 	"bot_hmb/internal/dispatcher"
+	"bot_hmb/internal/limiter"
 	"bot_hmb/internal/telegram"
 	"bot_hmb/internal/usecase"
 	"context"
@@ -41,6 +42,7 @@ func (m *Manager) JoinBot() {
 	if err != nil {
 		log.Fatal("redis not connected %w", err)
 	}
+	rateLimiter := limiter.NewRateLimiter(redisClient, 30, time.Minute)
 	m.Queue = telegram.NewMessageQueue(b)
 	wrapper := telegram.NewTelegramWrapper(m.Queue)
 	constructor := telegram.NewConstructor(conf.Debug, wrapper)
@@ -53,7 +55,7 @@ func (m *Manager) JoinBot() {
 			MasterUserNickname: conf.MasterUserNickname},
 		conn,
 		redisClient)
-	dp := dispatcher.NewDispatcher(uc)
+	dp := dispatcher.NewDispatcher(uc, rateLimiter)
 	dp.SetHandlers()
 	m.Queue.Client.AddHandler(dp.Dispatch)
 	m.Queue.Client.Start(ctx)

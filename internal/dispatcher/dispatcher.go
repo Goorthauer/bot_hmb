@@ -1,6 +1,7 @@
 package dispatcher
 
 import (
+	"bot_hmb/internal/limiter"
 	"bot_hmb/internal/usecase"
 	"context"
 	"errors"
@@ -18,13 +19,14 @@ type Dispatcher interface {
 
 type dispatcher struct {
 	uc       *usecase.Usecase
+	limiter  limiter.ChatRateLimiter
 	handlers *Handlers
 }
 
-func NewDispatcher(
-	uc *usecase.Usecase) Dispatcher {
+func NewDispatcher(uc *usecase.Usecase, limiter limiter.ChatRateLimiter) Dispatcher {
 	return &dispatcher{
-		uc: uc,
+		uc:      uc,
+		limiter: limiter,
 	}
 }
 
@@ -45,7 +47,13 @@ func (d *dispatcher) dispatch(ctx context.Context, update *models.Update) error 
 	if chatID == -1 {
 		return errors.New("could not find chat id")
 	}
-
+	allowed, err := d.limiter.AllowRequest(ctx, chatID)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error in rate limiter for chat %d: %v", chatID, err))
+	}
+	if !allowed {
+		return errors.New(fmt.Sprintf("Rate limit exceeded for chatID %d", chatID))
+	}
 	text := ""
 	if update.Message != nil {
 		text = update.Message.Text

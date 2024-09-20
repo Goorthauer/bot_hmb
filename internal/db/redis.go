@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	redis "github.com/go-redis/redis/v8"
 )
 
 type RedisClient struct {
@@ -41,4 +41,16 @@ func (rc *RedisClient) Del(ctx context.Context, key string) error {
 		return nil
 	}
 	return err
+}
+
+func (rc *RedisClient) Incr(ctx context.Context, key string) (int, error) {
+	count, err := rc.client.Incr(ctx, key).Result()
+	if err != nil {
+		return int(count), err
+	}
+	return int(count), nil
+}
+
+func (rc *RedisClient) Expire(ctx context.Context, key string, interval time.Duration) error {
+	return rc.client.Expire(ctx, key, interval).Err()
 }

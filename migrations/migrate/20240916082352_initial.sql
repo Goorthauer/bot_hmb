@@ -50,13 +50,6 @@ CREATE TABLE IF NOT EXISTS telegram_auth_tickets (
 );
 CREATE INDEX IF NOT EXISTS telegram_auth_tickets_user_id_created_at ON telegram_auth_tickets(user_id, created_at DESC);
 
-INSERT INTO schools (id, name,vk_link,city,contact,address,region)
-VALUES ('da68b3a4-a310-43ab-805f-159090d8cf55',
-        'Школа ИСБ Ставрополь',
-        'https://vk.com/hmbschoolstv',
-        'Ставрополь',
-        '+7-905-493-34-92',
-        'Рогожникова 1',26);
 
 -- +goose StatementEnd
 

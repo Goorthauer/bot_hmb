@@ -1,4 +1,4 @@
-module hmb_bot
+module bot_hmb
 
 go 1.22.1
 

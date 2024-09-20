@@ -5,5 +5,5 @@ services:
     build:
       context: .
     volumes:
-        - ./.env:/.env
-        - ./tmp:/tmp
+      - ./.env:/.env
+      - ./tmp:/tmp
