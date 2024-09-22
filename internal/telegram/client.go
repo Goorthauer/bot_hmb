@@ -23,6 +23,7 @@ type Client interface {
 	SendPhoto(ctx context.Context, file []byte, caption string, chatID string) (*models.Message, error)
 	EditMessageCaption(ctx context.Context, caption string, chatID string, messageID int) (*models.Message, error)
 	EditMessageText(ctx context.Context, text string, chatID string, messageID int) (*models.Message, error)
+	EditMessageTextWithButtons(ctx context.Context, text string, chatID string, messageID int, kb models.ReplyMarkup) (*models.Message, error)
 
 	AddHandler(handle bot.HandlerFunc)
 	Start(ctx context.Context)
@@ -218,6 +219,36 @@ func (c *client) EditMessageText(ctx context.Context,
 		MessageID: messageID,
 		Text:      text,
 		ParseMode: models.ParseModeMarkdown,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "429 Too Many Requests") {
+			c.lastSentAt = time.Now().Add(CooldownAfter429)
+		}
+		return nil, err
+	}
+
+	return m, nil
+}
+
+//nolint:dupl // similar methods
+func (c *client) EditMessageTextWithButtons(ctx context.Context,
+	text string, chatID string, messageID int,
+	kb models.ReplyMarkup) (*models.Message, error) {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	now := time.Now()
+	if now.Before(c.lastSentAt.Add(c.cfg.PauseBetweenMessages)) {
+		time.Sleep(c.lastSentAt.Add(c.cfg.PauseBetweenMessages).Sub(now))
+	}
+	c.lastSentAt = time.Now()
+
+	m, err := c.botClient.EditMessageText(ctx, &bot.EditMessageTextParams{
+		ChatID:      chatID,
+		MessageID:   messageID,
+		Text:        text,
+		ParseMode:   models.ParseModeMarkdown,
+		ReplyMarkup: kb,
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "429 Too Many Requests") {

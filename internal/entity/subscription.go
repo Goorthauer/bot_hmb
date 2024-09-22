@@ -13,4 +13,5 @@ type Subscription struct {
 	CreatedAt  time.Time `json:"created_at" gorm:"column:created_at"`
 	DeadlineAt time.Time `json:"deadline_at" gorm:"column:deadline_at"`
 	Price      string    `json:"price" gorm:"column:price"`
+	Days       int       `json:"days" gorm:"column:days"`
 }

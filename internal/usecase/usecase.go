@@ -21,6 +21,7 @@ var (
 type Repositories struct {
 	UsersRepository           repository.UsersRepository
 	UserSchoolsRepository     repository.UserSchoolsRepository
+	UserPresentsRepository    repository.UserPresentsRepository
 	SchoolsRepository         repository.SchoolsRepository
 	SchoolsTrainingRepository repository.SchoolsTrainingRepository
 	SubscriptionsRepository   repository.SubscriptionsRepository
@@ -59,6 +60,7 @@ func New(
 			SubscriptionsRepository:       repository.NewSubscriptionsRepository(db.Gorm),
 			SchoolsRepository:             repository.NewSchoolsRepository(db.Gorm),
 			UserSchoolsRepository:         repository.NewUserSchoolsRepository(db.Gorm),
+			UserPresentsRepository:        repository.NewUserPresentsRepository(db.Gorm),
 			TelegramAuthTicketsRepository: repository.NewTelegramAuthTicketsRepository(db.Gorm),
 			UsersRepository: repository.NewUsersRepositoryWithRedis(
 				repository.NewUsersRepository(db.Gorm, usersEncryptKey),

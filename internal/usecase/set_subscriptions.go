@@ -78,6 +78,7 @@ func (u *Usecase) SetSubscriptions(ctx context.Context,
 		CreatedAt:  now,
 		DeadlineAt: deadline,
 		Price:      price,
+		Days:       daysNumber,
 	})
 	if err != nil {
 		return err

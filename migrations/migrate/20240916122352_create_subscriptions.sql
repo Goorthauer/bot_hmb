@@ -1,11 +1,13 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS subscriptions (
-    id varchar primary key,
-    user_id varchar,
-    school_id varchar,
-    price varchar,
-    created_at timestamptz,
+CREATE TABLE IF NOT EXISTS subscriptions
+(
+    id          varchar primary key,
+    user_id     varchar,
+    school_id   varchar,
+    price       varchar,
+    days        int,
+    created_at  timestamptz,
     deadline_at timestamptz
 );
 -- +goose StatementEnd

@@ -9,8 +9,9 @@ import (
 )
 
 type Handlers struct {
-	MasterHandlers map[string]func(context.Context, int64, string) error
-	UserHandlers   map[string]func(context.Context, int64, *models.Update) error
+	MasterHandlers           map[string]func(context.Context, int64, string) error
+	MasterHandlersWithModels map[string]func(context.Context, int64, *models.Update) error
+	UserHandlers             map[string]func(context.Context, int64, *models.Update) error
 }
 
 func (d *dispatcher) SetHandlers() {
@@ -23,7 +24,10 @@ func (d *dispatcher) SetHandlers() {
 			"/create_ticket":               d.createTicket,
 			"/hard_invite":                 d.hardInvite,
 			"/subscription_list":           d.subscriptionList,
-			"/subscription-quiz":           d.subscriptionQuiz,
+			"/subscription_quiz":           d.subscriptionQuiz,
+		},
+		MasterHandlersWithModels: map[string]func(context.Context, int64, *models.Update) error{
+			"/present": d.subscriptionPresent,
 		},
 		UserHandlers: map[string]func(context.Context, int64, *models.Update) error{
 			"/start":         d.startCommand,
@@ -61,6 +65,11 @@ func (d *dispatcher) masterHandler(ctx context.Context, chatID int64, text strin
 		for cmd, handler := range d.handlers.MasterHandlers {
 			if strings.HasPrefix(update.CallbackQuery.Data, cmd) {
 				return true, handler(ctx, chatID, text)
+			}
+		}
+		for cmd, handler := range d.handlers.MasterHandlersWithModels {
+			if strings.HasPrefix(update.CallbackQuery.Data, cmd) {
+				return true, handler(ctx, chatID, update)
 			}
 		}
 	}
@@ -148,6 +157,15 @@ func (d *dispatcher) setSubscriptions(ctx context.Context, chatID int64, text st
 		price = args[3]
 	}
 	return d.uc.SetSubscriptions(ctx, chatID, days, phone, price)
+}
+
+func (d *dispatcher) subscriptionPresent(ctx context.Context, chatID int64, update *models.Update) error {
+	data := strings.Split(update.CallbackQuery.Data, " ")
+	userID := ""
+	if len(data) > 1 {
+		userID = data[1]
+	}
+	return d.uc.SubscriptionPresent(ctx, chatID, update.CallbackQuery.Message.Message.ID, userID)
 }
 
 func (d *dispatcher) createTicket(ctx context.Context, chatID int64, text string) error {

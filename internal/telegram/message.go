@@ -14,6 +14,7 @@ const (
 	SendPoll
 	EditMessageCaption
 	EditMessageText
+	EditMessageTextWithButton
 )
 
 type Message struct {
@@ -60,6 +61,8 @@ func (m *MessageQueue) QueueWorker() {
 		case EditMessageCaption:
 			_, err = m.Client.EditMessageCaption(ctx, msg.CaptionArgName, msg.ChatID, msg.MessageID)
 		case EditMessageText:
+			_, err = m.Client.EditMessageText(ctx, msg.Text, msg.ChatID, msg.MessageID)
+		case EditMessageTextWithButton:
 			_, err = m.Client.EditMessageText(ctx, msg.Text, msg.ChatID, msg.MessageID)
 		}
 		if err != nil {

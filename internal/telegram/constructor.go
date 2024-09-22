@@ -214,18 +214,28 @@ func (c *constructor) ConstructSubscriptionListAndSend(ctx context.Context, chat
 
 func (c *constructor) ConstructSubscriptionQuizAndSend(ctx context.Context, chatIDs []int64, fioFull string, users []*entity.User) error {
 	text := fmt.Sprintf("%s, Отметь людей присутствующих сегодня на занятии.", fioFull)
-	opts := make([]string, 0, len(users))
-	for _, v := range users {
-		if v == nil {
-			return nil
+	if len(users) != 0 {
+		err := c.sendMessageToChatIDs(ctx, bot.EscapeMarkdown(text), chatIDs)
+		if err != nil {
+			return err
 		}
-		opts = append(opts, v.PersonalData.GetFullName())
 	}
-	err := c.sendPollToChatIDs(ctx, bot.EscapeMarkdown(text), opts, chatIDs)
-	if err != nil {
-		return err
+	for _, user := range users {
+		kb := &models.InlineKeyboardMarkup{
+			InlineKeyboard: [][]models.InlineKeyboardButton{
+				{
+					{
+						Text:         user.PersonalData.GetFullName(),
+						CallbackData: fmt.Sprintf("/present %s", user.ID),
+					},
+				},
+			},
+		}
+		err := c.sendMessageWithButtonsToChatIDs(ctx, "был ли человек на тренировке\\?", &kb, chatIDs)
+		if err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 

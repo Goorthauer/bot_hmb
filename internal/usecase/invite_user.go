@@ -39,8 +39,7 @@ func (u *Usecase) InviteUser(
 	if !masterUser.IsMaster {
 		return ErrIsNotMaster
 	}
-
-	if schoolID == "" && masterUser.Username != u.config.MasterUserNickname {
+	if schoolID == "" {
 		schoolID = masterUser.SchoolID.String()
 	}
 

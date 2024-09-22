@@ -15,6 +15,7 @@ type Wrapper interface {
 	SendPoll(ctx context.Context, text string, opts []string, chatID string)
 	EditMessageCaption(ctx context.Context, caption string, chatID string, messageID int)
 	EditMessageText(ctx context.Context, text string, chatID string, messageID int)
+	EditMessageTextWithButtons(ctx context.Context, text string, chatID string, messageID int, kb models.ReplyMarkup)
 }
 
 type telegramWrapper struct {
@@ -82,5 +83,21 @@ func (w *telegramWrapper) EditMessageText(_ context.Context, text string, chatID
 		ChatID:    chatID,
 		Text:      text,
 		MessageID: messageID,
+	}
+}
+
+func (w *telegramWrapper) EditMessageTextWithButtons(_ context.Context, text string, chatID string, messageID int, keyboard models.ReplyMarkup) {
+	kb, err := json.Marshal(keyboard)
+	if err != nil {
+		fmt.Println("kb marshall err: %w", err)
+		return
+	}
+
+	w.Queue.MessageQueue <- Message{
+		Operation: EditMessageTextWithButton,
+		ChatID:    chatID,
+		Text:      text,
+		MessageID: messageID,
+		Kb:        kb,
 	}
 }
