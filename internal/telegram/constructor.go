@@ -29,6 +29,7 @@ type Constructor interface {
 	ConstructAttachedAndSend(ctx context.Context, chatIDs []int64, schoolName string) error
 	ConstructSubscriptionsAndSend(ctx context.Context, chatIDs []int64, fioFull string, deadline time.Time) error
 	ConstructSubscriptionListAndSend(ctx context.Context, chatIDs []int64, fioFull string, userList map[uuid.UUID]entity.User, subs []entity.Subscription) error
+	ConstructSubscriptionListAndSendV2(ctx context.Context, chatIDs []int64, fioFull string, userList map[uuid.UUID]entity.User, subs []*entity.PresentsSubscription) error
 	ConstructSubscriptionQuizAndSend(ctx context.Context, chatIDs []int64, fioFull string, users []*entity.User) error
 	ConstructUserHelpAndSend(ctx context.Context, chatIDs []int64) error
 	ConstructRegisterPhone(ctx context.Context, chatID int64) error
@@ -203,6 +204,57 @@ func (c *constructor) ConstructSubscriptionListAndSend(ctx context.Context, chat
 💪 %s(%s) - абонемент до %s%s;
 `,
 			user.PersonalData.GetFullName(), user.Phone, danger, v.DeadlineAt.Format(time.DateOnly))
+	}
+	err := c.sendMessageToChatIDs(ctx, bot.EscapeMarkdown(text), chatIDs)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *constructor) ConstructSubscriptionListAndSendV2(ctx context.Context, chatIDs []int64, fioFull string, userList map[uuid.UUID]entity.User, subs []*entity.PresentsSubscription) error {
+	text := fmt.Sprintf(
+		`%s, вот список людей вашей школы:
+`, fioFull)
+	if len(subs) == 0 || len(userList) == 0 {
+		text = fmt.Sprintf(
+			`%s, К сожалению нет зарегистрированных абонементов.
+что бы зарегистрировать абонемент - осуществите команду:
+/set_subscriptions {номер телефона} {количество дней} {*цена}
+`, fioFull)
+	}
+	for _, v := range subs {
+		if v == nil {
+			continue
+		}
+		var user entity.User
+		var ok bool
+		if user, ok = userList[v.UserID]; !ok {
+			continue
+		}
+		danger := ""
+		if v.LostDays >= v.CountTraining {
+			dur := time.Since(v.DeadlineAt)
+			dayExp := math.Round(-dur.Hours() / 24)
+			switch {
+			case dayExp == 0:
+				danger = "(⚠️закончится сегодня) "
+			case dayExp < 0:
+				danger = "‼️закончился - "
+			case dayExp < 3:
+				danger = fmt.Sprintf(`(закончится через %v дней) `, dayExp)
+			}
+		} else {
+			danger = "‼️закончился, т.к. не осталось занятий "
+		}
+
+		text += fmt.Sprintf(
+			`
+💪 %s(%s) - абонемент до %s%s(осталось %v занятий);
+`,
+			user.PersonalData.GetFullName(), user.Phone, danger, v.DeadlineAt.Format(time.DateOnly),
+			v.LostDays-v.CountTraining)
 	}
 	err := c.sendMessageToChatIDs(ctx, bot.EscapeMarkdown(text), chatIDs)
 	if err != nil {

@@ -21,7 +21,7 @@ func (u *Usecase) GetSubscriptionList(ctx context.Context, chatID int64) error {
 	if !masterUser.IsMaster {
 		return ErrIsNotMaster
 	}
-	subs, err := u.repo.SubscriptionsRepository.BySchoolID(ctx, masterUser.SchoolID, true)
+	subs, err := u.repo.UserPresentsRepository.BySchoolIDWithLost(ctx, masterUser.SchoolID)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (u *Usecase) GetSubscriptionList(ctx context.Context, chatID int64) error {
 		}
 		userList[v.ID] = *v
 	}
-	return u.Constructor.ConstructSubscriptionListAndSend(ctx,
+	return u.Constructor.ConstructSubscriptionListAndSendV2(ctx,
 		[]int64{chatID},
 		masterUser.GetFullNameWithSchool(),
 		userList,

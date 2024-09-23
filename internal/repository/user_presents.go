@@ -3,7 +3,9 @@ package repository
 import (
 	"bot_hmb/internal/entity"
 	"context"
+	"fmt"
 
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -14,6 +16,7 @@ const (
 
 type UserPresentsRepository interface {
 	Create(ctx context.Context, dto *entity.Presents) error
+	BySchoolIDWithLost(ctx context.Context, schoolID uuid.UUID) ([]*entity.PresentsSubscription, error)
 }
 
 type userPresentsRepository struct {
@@ -40,4 +43,33 @@ func (r *userPresentsRepository) Create(ctx context.Context, dto *entity.Present
 	}
 
 	return nil
+}
+
+func (r *userPresentsRepository) BySchoolIDWithLost(ctx context.Context, schoolID uuid.UUID) ([]*entity.PresentsSubscription, error) {
+	var dto []*entity.PresentsSubscription
+	subTx := r.Db.
+		WithContext(ctx).
+		Select(`user_id,sum(days) as days,min(created_at) as created_at,max(deadline_at) as deadline_at`).
+		Table(subscriptionTable).
+		Where(`now() between (date_trunc('day',created_at)) and deadline_at`).
+		Where(`school_id = ?`, schoolID).
+		Group(`user_id`)
+	result := r.Db.WithContext(ctx).
+		Select(fmt.Sprintf(
+			`%[1]s.user_id,
+					count(%[1]s.id) as count_training,
+					%[2]s.days as subscription_days,
+					%[2]s.deadline_at as deadline_at`,
+			userPresentsTable, subscriptionTable)).
+		Table(userPresentsTable).
+		Joins(fmt.Sprintf(`JOIN (?) %[2]s on %[2]s.user_id = %[1]s.user_id
+and %[1]s.created_at between date_trunc('day', %[2]s.created_at) and %[2]s.deadline_at`,
+			userPresentsTable, subscriptionTable), subTx).
+		Group(fmt.Sprintf(`%[1]s.user_id, %[2]s.days, %[2]s.deadline_at`, userPresentsTable, subscriptionTable)).
+		Debug().
+		Find(&dto)
+	if result.Error != nil {
+		return dto, result.Error
+	}
+	return dto, nil
 }
