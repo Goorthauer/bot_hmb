@@ -36,8 +36,10 @@ func (r *usersRepositoryWithRedis) ByID(ctx context.Context, userID uuid.UUID) (
 	return user, err
 }
 
-func (r *usersRepositoryWithRedis) BySchool(ctx context.Context, schoolID uuid.UUID) ([]*entity.User, error) {
-	return r.repo.BySchool(ctx, schoolID)
+func (r *usersRepositoryWithRedis) BySchool(ctx context.Context,
+	schoolID uuid.UUID,
+	onlySubscription bool) ([]*entity.User, error) {
+	return r.repo.BySchool(ctx, schoolID, onlySubscription)
 }
 
 func (r *usersRepositoryWithRedis) ByIDs(ctx context.Context, userIDs []uuid.UUID) ([]*entity.User, error) {
@@ -142,7 +144,6 @@ func (r *usersRepositoryWithRedis) setCacheUser(ctx context.Context, user *entit
 	if err != nil {
 		return err
 	}
-
 	if user.Username != "" {
 		err = r.redis.Set(ctx, fmt.Sprintf(userCachePattern, user.Username), cacheData, expiration)
 		if err != nil {

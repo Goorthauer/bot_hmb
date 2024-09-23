@@ -383,6 +383,12 @@ func (c *constructor) ConstructMasterHelpAndSend(ctx context.Context, chatIDs []
 					CallbackData: "/subscription_list",
 				},
 			},
+			{
+				{
+					Text:         "Отметить людей на тренировке",
+					CallbackData: "/subscription_quiz",
+				},
+			},
 
 			{
 				{

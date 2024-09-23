@@ -18,7 +18,7 @@ func (u *Usecase) SubscriptionQuiz(ctx context.Context, chatID int64) error {
 	if !masterUser.IsMaster {
 		return ErrIsNotMaster
 	}
-	users, err := u.repo.UsersRepository.BySchool(ctx, masterUser.SchoolID)
+	users, err := u.repo.UsersRepository.BySchool(ctx, masterUser.SchoolID, true)
 	if err != nil {
 		return err
 	}

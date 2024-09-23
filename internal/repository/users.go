@@ -17,7 +17,7 @@ type UsersRepository interface {
 	Create(ctx context.Context, user *entity.User) error
 	ByID(ctx context.Context, userID uuid.UUID) (entity.User, error)
 	ByIDs(ctx context.Context, userIDs []uuid.UUID) ([]*entity.User, error)
-	BySchool(ctx context.Context, schoolID uuid.UUID) ([]*entity.User, error)
+	BySchool(ctx context.Context, schoolID uuid.UUID, onlySubscription bool) ([]*entity.User, error)
 	ByUsername(ctx context.Context, username string) (entity.User, error)
 	ByPhone(ctx context.Context, phone string) (entity.User, error)
 	SetMasterRights(ctx context.Context, userID uuid.UUID, isMaster bool) error
@@ -36,7 +36,7 @@ func NewUsersRepository(db *gorm.DB, usersPDBaseEncryptionKey string) UsersRepos
 }
 
 func (r *usersRepository) Create(ctx context.Context, user *entity.User) error {
-	if err := r.EncryptPersonalData(user); err != nil {
+	if err := r.encryptPersonalData(user); err != nil {
 		return err
 	}
 
@@ -54,17 +54,27 @@ func (r *usersRepository) ByID(ctx context.Context, userID uuid.UUID) (entity.Us
 	return r.fetchUser(ctx, fmt.Sprintf("%s.id = ?", usersTable), userID)
 }
 
-func (r *usersRepository) BySchool(ctx context.Context, schoolID uuid.UUID) ([]*entity.User, error) {
+func (r *usersRepository) BySchool(ctx context.Context,
+	schoolID uuid.UUID,
+	onlySubscription bool) ([]*entity.User, error) {
 	var users []*entity.User
-	result := r.baseTx(ctx).
-		Where("school_id = ?", schoolID).
+	tx := r.baseTx(ctx)
+	if onlySubscription {
+		subQuery := r.getSubscriptionTx(ctx)
+		tx.Joins(
+			fmt.Sprintf("JOIN (?) as %[1]s on %[2]s.id = %[1]s.user_id", subscriptionTable, usersTable),
+			subQuery)
+	}
+	result := tx.Where(fmt.Sprintf("%s.school_id = ?", userSchoolsTable), schoolID).
+		Where("is_activated").
 		Not("is_deleted").
+		Debug().
 		Find(&users)
 	if result.Error != nil {
 		return users, result.Error
 	}
 	for _, user := range users {
-		if err := r.DecryptPersonalData(user); err != nil {
+		if err := r.decryptPersonalData(user); err != nil {
 			return users, err
 		}
 	}
@@ -74,14 +84,14 @@ func (r *usersRepository) BySchool(ctx context.Context, schoolID uuid.UUID) ([]*
 func (r *usersRepository) ByIDs(ctx context.Context, userIDs []uuid.UUID) ([]*entity.User, error) {
 	var users []*entity.User
 	result := r.baseTx(ctx).
-		Where("id = ANY(?)", pq.Array(userIDs)).
+		Where("users.id = ANY(?)", pq.Array(userIDs)).
 		Not("is_deleted").
 		Find(&users)
 	if result.Error != nil {
 		return users, result.Error
 	}
 	for _, user := range users {
-		if err := r.DecryptPersonalData(user); err != nil {
+		if err := r.decryptPersonalData(user); err != nil {
 			return users, err
 		}
 	}
@@ -122,16 +132,24 @@ func (r *usersRepository) fetchUser(ctx context.Context, query interface{}, args
 	if result.Error != nil {
 		return user, result.Error
 	}
-	if err := r.DecryptPersonalData(&user); err != nil {
+	if err := r.decryptPersonalData(&user); err != nil {
 		return user, err
 	}
 	return user, nil
 }
 
-func (r *usersRepository) EncryptPersonalData(user *entity.User) error {
+func (r *usersRepository) encryptPersonalData(user *entity.User) error {
 	return user.PersonalData.Encrypt(r.usersPDBaseEncryptionKey, user.PDEncryptionKey)
 }
 
-func (r *usersRepository) DecryptPersonalData(user *entity.User) error {
+func (r *usersRepository) decryptPersonalData(user *entity.User) error {
 	return user.PersonalData.Decrypt(r.usersPDBaseEncryptionKey, user.PDEncryptionKey)
+}
+
+func (r *usersRepository) getSubscriptionTx(ctx context.Context) *gorm.DB {
+	txSub := r.Db.WithContext(ctx).Table(subscriptionTable).
+		Select(`DISTINCT ON (user_id) id`).
+		Order(`user_id, created_at DESC`)
+	subQuery := r.Db.WithContext(ctx).Table(subscriptionTable).Where("id IN (?)", txSub)
+	return subQuery
 }
