@@ -205,7 +205,11 @@ func (d *dispatcher) startCommand(ctx context.Context, chatID int64, update *mod
 			ticket = tokens[1]
 		}
 	}
-	username := update.Message.Chat.Username
+	var username string
+	if update.Message != nil {
+		username = update.Message.Chat.Username
+	}
+
 	if update.CallbackQuery != nil {
 		username = update.CallbackQuery.Message.Message.Chat.Username
 	}
@@ -213,7 +217,15 @@ func (d *dispatcher) startCommand(ctx context.Context, chatID int64, update *mod
 }
 
 func (d *dispatcher) registerCommand(ctx context.Context, chatID int64, update *models.Update) error {
-	return d.uc.Registration(ctx, chatID, update.Message.Chat.Username)
+	var username string
+	if update.Message != nil {
+		username = update.Message.Chat.Username
+	}
+
+	if update.CallbackQuery != nil {
+		username = update.CallbackQuery.Message.Message.Chat.Username
+	}
+	return d.uc.Registration(ctx, chatID, username)
 }
 
 func (d *dispatcher) registerLastStep(ctx context.Context, chatID int64, update *models.Update) error {
