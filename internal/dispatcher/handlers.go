@@ -32,6 +32,7 @@ func (d *dispatcher) SetHandlers() {
 		UserHandlers: map[string]func(context.Context, int64, *models.Update) error{
 			"/start":         d.startCommand,
 			"/register":      d.registerCommand,
+			"/last_step":     d.registerLastStep,
 			"/subscriptions": d.subscriptionsCommand,
 			"/detach":        d.detachCommand,
 			"/info":          d.infoCommand,
