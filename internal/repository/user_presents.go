@@ -16,6 +16,8 @@ const (
 
 type UserPresentsRepository interface {
 	Create(ctx context.Context, dto *entity.Presents) error
+	ByUserID(ctx context.Context, userID uuid.UUID, lastCount int) ([]*entity.Presents, error)
+
 	BySchoolIDWithLost(ctx context.Context, schoolID uuid.UUID) ([]*entity.PresentsSubscription, error)
 }
 
@@ -42,6 +44,20 @@ func (r *userPresentsRepository) Create(ctx context.Context, dto *entity.Present
 	}
 
 	return nil
+}
+
+func (r *userPresentsRepository) ByUserID(ctx context.Context, userID uuid.UUID, lastCount int) ([]*entity.Presents, error) {
+	var dto []*entity.Presents
+	result := r.Db.
+		WithContext(ctx).
+		Table(userPresentsTable).
+		Where(`user_id = ?`, userID).
+		Limit(lastCount).
+		Find(&dto)
+	if result.Error != nil {
+		return dto, result.Error
+	}
+	return dto, nil
 }
 
 func (r *userPresentsRepository) BySchoolIDWithLost(ctx context.Context, schoolID uuid.UUID) ([]*entity.PresentsSubscription, error) {
