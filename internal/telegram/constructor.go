@@ -364,7 +364,7 @@ func (c *constructor) ConstructRegisterPhone(ctx context.Context, chatID int64) 
 		OneTimeKeyboard: true,
 	}
 
-	text := "Пожалуйста, отправьте ваш номер телефона:"
+	text := "Пожалуйста, отправьте ваш номер телефона:\nКнопкой ниже или самостоятельно в формате 7ХХХХХХХХХХ"
 	err := c.sendMessageWithButtonsToChatIDs(ctx, bot.EscapeMarkdown(text), replyKeyboard, []int64{chatID})
 	if err != nil {
 		return err

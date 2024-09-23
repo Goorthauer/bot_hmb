@@ -43,7 +43,7 @@ func (r *stepRepositoryWithRedis) ByChatID(ctx context.Context, chatID int64) (e
 }
 
 func (r *stepRepositoryWithRedis) SetStep(ctx context.Context, dto *entity.Step) error {
-	var expiration = 1 * time.Hour
+	var expiration = 15 * time.Minute
 	cacheData, err := json.Marshal(dto)
 	if err != nil {
 		return err
