@@ -36,7 +36,6 @@ func (r *userPresentsRepository) Create(ctx context.Context, dto *entity.Present
 			Columns:   []clause.Column{{Name: "id"}},
 			UpdateAll: true,
 		}).
-		Debug().
 		Create(dto)
 	if result.Error != nil {
 		return result.Error
@@ -66,7 +65,6 @@ func (r *userPresentsRepository) BySchoolIDWithLost(ctx context.Context, schoolI
 and %[1]s.created_at between date_trunc('day', %[2]s.created_at) and %[2]s.deadline_at`,
 			userPresentsTable, subscriptionTable), subTx).
 		Group(fmt.Sprintf(`%[1]s.user_id, %[2]s.days, %[2]s.deadline_at`, userPresentsTable, subscriptionTable)).
-		Debug().
 		Find(&dto)
 	if result.Error != nil {
 		return dto, result.Error

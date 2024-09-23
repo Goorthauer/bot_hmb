@@ -33,7 +33,6 @@ func (r *userSchoolsRepository) Create(ctx context.Context, dto *entity.UserScho
 			Columns:   []clause.Column{{Name: "user_id"}},
 			UpdateAll: true,
 		}).
-		Debug().
 		Create(dto)
 	if result.Error != nil {
 		return result.Error

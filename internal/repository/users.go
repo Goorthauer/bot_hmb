@@ -68,7 +68,6 @@ func (r *usersRepository) BySchool(ctx context.Context,
 	result := tx.Where(fmt.Sprintf("%s.school_id = ?", userSchoolsTable), schoolID).
 		Where("is_activated").
 		Not("is_deleted").
-		Debug().
 		Find(&users)
 	if result.Error != nil {
 		return users, result.Error
