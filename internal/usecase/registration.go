@@ -73,10 +73,6 @@ func (u *Usecase) RegistrationByStep(ctx context.Context, chatID int64, field st
 	schoolList := make(map[uuid.UUID]string)
 	switch step.Step {
 	case entity.StepFirstName:
-		if _, err := checkPhone(step.Phone); err != nil {
-			_ = u.repo.StepRepository.DelStep(ctx, chatID)
-			return err
-		}
 		step.Firstname = field
 	case entity.StepLastname:
 		step.Lastname = field
@@ -89,6 +85,9 @@ func (u *Usecase) RegistrationByStep(ctx context.Context, chatID int64, field st
 		}
 	case entity.StepPhone:
 		step.Phone = field
+		if _, err := checkPhone(field); err != nil {
+			return err
+		}
 		user, err := u.repo.UsersRepository.ByPhone(ctx, field)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
