@@ -50,14 +50,14 @@ func NewConstructor(debug bool, wrapper Wrapper) Constructor {
 
 func (c *constructor) ConstructInfoDetachedAndSend(ctx context.Context, chatIDs []int64) error {
 	text := "ℹ️ На текущий момент бот не привязан к учётной записи HMB Schools\\.\n\n" +
-		"Для подключения нужно войти в свою учётную запись 👇"
+		"Для подключения нужно зарегистрировать в свою учётную запись 👇"
 
 	kb := &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
 				{
-					Text:         "Войти",
-					CallbackData: "/start",
+					Text:         "Регистрация",
+					CallbackData: "/register",
 				},
 			},
 		},
@@ -377,7 +377,7 @@ func (c *constructor) ConstructRegisterWithSchool(ctx context.Context, chatID in
 	text := "Последний шаг! Выберите тренировочный зал, который ближе всего к вам находится."
 	buttons := make([][]models.InlineKeyboardButton, 0)
 	for id, v := range schools {
-		callbackData := fmt.Sprintf("/last-step %s", id)
+		callbackData := fmt.Sprintf("/last_step %s", id)
 		buttons = append(buttons, []models.InlineKeyboardButton{{
 			Text:         v,
 			CallbackData: callbackData,
@@ -495,7 +495,7 @@ func (c *constructor) ConstructStartAutoAndSend(ctx context.Context, chatIDs []i
 			"🥑 Для подключения аккаунта *%s* нажмите на кнопку ниже 👇"+
 			"\n\n"+
 			"_Если в процессе возникнут ошибки или нужен другой аккаунт – используйте подключение вручную, "+
-			"для этого достаточно войти в свою учётную запись_",
+			"для этого достаточно Зарегистрировать в свою учётную запись_",
 		username,
 		username)
 
@@ -536,8 +536,8 @@ func (c *constructor) ConstructStartManualAndSend(ctx context.Context, chatIDs [
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
 				{
-					Text:         "Войти",
-					CallbackData: "/start",
+					Text:         "Регистрация",
+					CallbackData: "/register",
 				},
 			},
 		},
@@ -584,8 +584,8 @@ func (c *constructor) ConstructDetachDetachedAndSend(ctx context.Context, chatID
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{
 				{
-					Text:         "Войти",
-					CallbackData: "/start",
+					Text:         "Регистрация",
+					CallbackData: "/register",
 				},
 			},
 		},

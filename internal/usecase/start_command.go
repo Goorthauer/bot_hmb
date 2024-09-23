@@ -21,7 +21,7 @@ func (u *Usecase) StartCommand(ctx context.Context,
 		return err
 	}
 
-	if account != nil {
+	if account.ChatID != 0 {
 		shouldAskToDetach, currentUser, err := u.shouldAskToDetach(ctx, account)
 		if err != nil {
 			return err
